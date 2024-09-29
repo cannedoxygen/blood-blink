@@ -1,0 +1,35 @@
+import { Hono } from 'hono';
+
+// Mock function to fetch SOL price
+async function getSOLPriceInUSD(): Promise<number> {
+  // Example: fetch from an external API
+  return 20; // Assume SOL is $20
+}
+
+const SWAP_AMOUNT_USD_OPTIONS = [25, 50, 100];
+
+const app = new Hono();
+
+// GET handler to display price options for BLOOD
+app.get('/:token', async (c) => {
+  const solPrice = await getSOLPriceInUSD();
+  const token = c.req.param('token');  // BLOOD Token
+
+  const response = {
+    icon: 'https://i.imgur.com/JaZTn8R.png',  // BLOOD token image
+    label: `Buy ${token}`,
+    title: `Buy ${token} with SOL`,
+    description: `Select an amount in USD to pay in SOL.`,
+    actions: SWAP_AMOUNT_USD_OPTIONS.map((amount) => {
+      const equivalentSOL = (amount / solPrice).toFixed(4);
+      return {
+        label: `$${amount} (~${equivalentSOL} SOL)`,
+        href: `/${token}/buy?amount=${amount}`,  // URL to complete the transaction
+      };
+    }),
+  };
+
+  return c.json(response);
+});
+
+export default app;
